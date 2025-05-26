@@ -72,7 +72,7 @@ export default function FaceMonitorDashboard() {
                                 defaultValue="A distância foi estimada usando a proporção entre a largura do retângulo delimitador (bounding box) detectado pelo face-api.js e uma distância de referência. O cálculo assume que:
                                     
                                     1. Para uma distância de referência de 100cm, um rosto médio ocupa aproximadamente 100px de largura
-                                    2. A fórmula aplicada é: Distância (cm) = (100 * 100) / larguraDoRostoEmPixels
+                                    2. A fórmula aplicada é: distância = (largura_real_rosto * distância_referência) / largura_rosto_em_pixels
                                     3. Esta abordagem fornece uma estimativa razoável para distâncias entre 50cm e 200cm
                                     4. A precisão varia com a resolução da câmera e características físicas do rosto"
                             />
@@ -92,7 +92,7 @@ export default function FaceMonitorDashboard() {
                                     2. Estrutura do documento:
                                     - descriptor: Array<number> (vetor de características faciais)
                                     - timestamp: number (milissegundos desde epoch)
-                                    - age: string (idade estimada)
+                                    - age: number (idade estimada)
                                     - gender: string (gênero estimado)
                                     - expression: string (emoção predominante)
                                     
@@ -111,7 +111,11 @@ export default function FaceMonitorDashboard() {
                                 id="duplicate-prevention"
                                 placeholder="Descreva o método utilizado para evitar contagem duplicada de rostos..."
                                 className="min-h-[100px] resize-none"
-                                defaultValue="Usa face-api.js com detectAllFaces + withFaceLandmarks + withFaceDescriptors para detectar múltiplas faces e extrair descritores (vetores numéricos). Para evitar duplicatas, calcula a distância euclidiana — medida de similaridade que calcula a raiz da soma dos quadrados das diferenças entre os valores dos vetores. Se a distância entre dois descritores for menor que 0.6, considera a mesma face. Aplica essa lógica localmente (últimos 10s) e no Firestore para salvar só novas faces."
+                                defaultValue="O sistema utiliza o face-api.js para detectar múltiplas faces com detectAllFaces, e extrair descritores faciais vetoriais com withFaceDescriptors. Para evitar contagem duplicada de rostos, ele compara o descritor facial atual com descritores salvos usando a distância euclidiana — uma medida matemática que calcula a raiz da soma dos quadrados das diferenças entre os elementos dos vetores.
+                                        Se a distância entre dois descritores for menor que 0.6, os rostos são considerados iguais. Essa verificação é feita em dois níveis:
+                                        Localmente: evita salvar rostos detectados nos últimos 10 segundos se forem semelhantes a um recentemente salvo.
+                                        Globalmente (Firestore): consulta o banco de dados para garantir que a face ainda não foi armazenada anteriormente.
+                                        Isso garante que cada face seja registrada apenas uma vez, mesmo que apareça repetidamente no vídeo."
                             />
                         </div>
                     </CardContent>
